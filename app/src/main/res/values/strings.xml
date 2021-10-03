@@ -5,8 +5,8 @@
     <string name="true_button">True</string>
     <string name="false_button">False</string>
     <string name="next_button">Next</string>
-    <string name="placeholder">here will be text to be shown</string>
     <string name="correct_answer">correct</string>
     <string name="wrong_answer">wrong</string>
     <string name="text_formated">Question: %d/%d</string>
+    <string name="current_score">Current Score: %d</string>
 </resources>

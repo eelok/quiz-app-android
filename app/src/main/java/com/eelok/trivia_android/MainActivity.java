@@ -1,6 +1,7 @@
 package com.eelok.trivia_android;
 
 import android.graphics.Color;
+import android.icu.text.MessageFormat;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
@@ -14,6 +15,8 @@ import com.eelok.trivia_android.data.AnswerListAsyncResponse;
 import com.eelok.trivia_android.data.Repository;
 import com.eelok.trivia_android.databinding.ActivityMainBinding;
 import com.eelok.trivia_android.model.Question;
+import com.eelok.trivia_android.model.Score;
+import com.eelok.trivia_android.util.Prefs;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
@@ -22,23 +25,27 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
+    private final String SCORE_ID = "score_id";
     private int currentQuestionIndex = 0;
     private List<Question> questionArrayList;
+    private int countScore = 0;
+    private Score score;
+    private Prefs prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        score = new Score();
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-
+        prefs = new Prefs(MainActivity.this);
+        binding.highestScore.setText(MessageFormat.format("Highest score: {0}", String.valueOf(prefs.getHighestScore())));
+        updateCurrentScore();
 
         questionArrayList = new Repository().getQuestions(new AnswerListAsyncResponse() {
             @Override
             public void processFinished(ArrayList<Question> questionArrayList) {
                 binding.questionTextview.setText(questionArrayList.get(currentQuestionIndex).getAnswer());
-
-//                binding.textViewOutOf.setText(getString(R.string.text_formated) +" " + currentQuestionIndex + "/" + questionArrayList.size());
                 //todo  почему нужно тут
                 updateCounterQuestionView(questionArrayList);
             }
@@ -47,8 +54,7 @@ public class MainActivity extends AppCompatActivity {
         binding.buttonNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                currentQuestionIndex = (currentQuestionIndex + 1) % questionArrayList.size();
-                updateQuestionView();
+                getNextQuestion();
             }
         });
 
@@ -70,6 +76,11 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void getNextQuestion() {
+        currentQuestionIndex = (currentQuestionIndex + 1) % questionArrayList.size();
+        updateQuestionView();
+    }
+
     private void updateCounterQuestionView(List<Question> questionArrayList) {
         binding.textViewOutOf.setText(String.format(getString(R.string.text_formated),
                 currentQuestionIndex, questionArrayList.size()));
@@ -86,12 +97,32 @@ public class MainActivity extends AppCompatActivity {
         int messageId = 0;
         if (correctAnswer == userChoice) {
             messageId = R.string.correct_answer;
+            incrementScore();
             fadeAnimation();
         } else {
             messageId = R.string.wrong_answer;
+            decrementScore();
             shakeAnimation();
         }
         Snackbar.make(binding.cardView, messageId, Snackbar.LENGTH_SHORT).show();
+    }
+
+    private void updateCurrentScore() {
+        binding.currentScore.setText(String.format(getString(R.string.current_score), score.getScore()));
+    }
+
+    private void incrementScore() {
+        countScore = countScore + 10;
+        score.setScore(countScore);
+        updateCurrentScore();
+    }
+
+    private void decrementScore() {
+        if (countScore > 0) {
+            countScore = countScore - 10;
+        }
+        score.setScore(countScore);
+        updateCurrentScore();
     }
 
     private void fadeAnimation() {
@@ -109,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onAnimationEnd(Animation animation) {
+                getNextQuestion();
                 binding.questionTextview.setTextColor(Color.WHITE);
             }
 
@@ -131,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onAnimationEnd(Animation animation) {
+                getNextQuestion();
                 binding.questionTextview.setTextColor(Color.WHITE);
             }
 
@@ -139,5 +172,11 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    @Override
+    protected void onPause() {
+        prefs.saveHighestScore(score.getScore());
+        super.onPause();
     }
 }
