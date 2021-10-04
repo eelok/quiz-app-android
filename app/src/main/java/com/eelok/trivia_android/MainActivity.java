@@ -3,6 +3,7 @@ package com.eelok.trivia_android;
 import android.graphics.Color;
 import android.icu.text.MessageFormat;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -25,7 +26,6 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
-    private final String SCORE_ID = "score_id";
     private int currentQuestionIndex = 0;
     private List<Question> questionArrayList;
     private int countScore = 0;
@@ -36,9 +36,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         score = new Score();
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         prefs = new Prefs(MainActivity.this);
+
+        currentQuestionIndex = prefs.getQuizState();
+        Log.d("QUIZ_STAT", "onCreate " + currentQuestionIndex);
         binding.highestScore.setText(MessageFormat.format("Highest score: {0}", String.valueOf(prefs.getHighestScore())));
         updateCurrentScore();
 
@@ -177,6 +181,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         prefs.saveHighestScore(score.getScore());
+        prefs.saveQuizState(currentQuestionIndex);
+        Log.d("STATE", "onPause " + prefs.getQuizState());
+        Log.d("score", "onPause" + prefs.getHighestScore());
         super.onPause();
     }
 }

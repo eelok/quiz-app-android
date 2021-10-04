@@ -7,7 +7,8 @@ import android.content.SharedPreferences;
 public class Prefs {
 
     private static final String HIGHEST_SCORE = "highest_score";
-    private SharedPreferences preferences;
+    private static final String QUIZ_STATE = "quiz_state";
+    private final SharedPreferences preferences;
 
 
     public Prefs(Activity context) {
@@ -15,15 +16,23 @@ public class Prefs {
     }
 
     public void saveHighestScore(int score){
-        int currentScore = score;
         int lastHighestScore = preferences.getInt(HIGHEST_SCORE, 0);
 
-        if(currentScore > lastHighestScore){
-            preferences.edit().putInt(HIGHEST_SCORE, currentScore).apply();
+        if(score > lastHighestScore){
+            preferences.edit().putInt(HIGHEST_SCORE, score).apply();
         }
     }
 
     public int getHighestScore(){
         return preferences.getInt(HIGHEST_SCORE, 0);
     }
+
+    public void saveQuizState(int index){
+        preferences.edit().putInt(QUIZ_STATE, index).apply();
+    }
+
+    public int getQuizState(){
+        return preferences.getInt(QUIZ_STATE, 0);
+    }
+
 }
